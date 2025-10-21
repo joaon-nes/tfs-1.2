@@ -248,7 +248,7 @@ void ProtocolGame::logout(bool displayEffect, bool forced)
 			}
 		}
 
-		if (displayEffect && player->getHealth() > 0) {
+		if (displayEffect && player->getHealth() > 0 && !player->isInGhostMode()) {
 			g_game.addMagicEffect(player->getPosition(), CONST_ME_POFF);
 		}
 	}
@@ -1168,7 +1168,7 @@ void ProtocolGame::sendContainer(uint8_t cid, const Container* container, bool h
 	msg.addItem(container);
 	msg.addString(container->getName());
 
-	msg.addByte(container->capacity());
+	msg.addByte(container->getName() == "Quiver" ? 4 : container->capacity());
 
 	msg.addByte(hasParent ? 0x01 : 0x00);
 
@@ -1939,6 +1939,33 @@ void ProtocolGame::AddPlayerSkills(NetworkMessage& msg)
 		msg.addByte(std::min<int32_t>(player->getSkillLevel(i), std::numeric_limits<uint16_t>::max()));
 		msg.addByte(player->getSkillPercent(i));
 	}
+	// critical chance
+	msg.add<uint16_t>(0);
+	msg.add<uint16_t>(0);
+
+	// critical damage
+	msg.add<uint16_t>(0);
+	msg.add<uint16_t>(0);
+
+	// life leech chance
+	msg.add<uint16_t>(0);
+	msg.add<uint16_t>(0);
+
+	// life leech
+	msg.add<uint16_t>(0);
+	msg.add<uint16_t>(0);
+
+	// mana leech chance
+	msg.add<uint16_t>(0);
+	msg.add<uint16_t>(0);
+
+	// mana leech
+	msg.add<uint16_t>(0);
+	msg.add<uint16_t>(0);
+	for (uint8_t i = SPECIALSKILL_FIRST; i <= SPECIALSKILL_LAST; ++i) {
+		msg.add<uint16_t>(std::min<int32_t>(100, player->varSpecialSkills[i]));
+		msg.add<uint16_t>(0);
+	}
 }
 
 void ProtocolGame::AddOutfit(NetworkMessage& msg, const Outfit_t& outfit)
@@ -2082,3 +2109,7 @@ void ProtocolGame::parseExtendedOpcode(NetworkMessage& msg)
 	// process additional opcodes via lua script event
 	addGameTask(&Game::parsePlayerExtendedOpcode, player->getID(), opcode, buffer);
 }
+
+
+
+

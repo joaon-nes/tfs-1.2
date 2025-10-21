@@ -20,9 +20,9 @@
 #ifndef FS_DEFINITIONS_H_877452FEC245450C9F96B8FD268D8963
 #define FS_DEFINITIONS_H_877452FEC245450C9F96B8FD268D8963
 
-#define STATUS_SERVER_NAME "The Forgotten Server 8.0"
+#define STATUS_SERVER_NAME "TFS 8.00"
 #define STATUS_SERVER_VERSION "1.2"
-#define STATUS_SERVER_DEVELOPERS "Mark Samman"
+#define STATUS_SERVER_DEVELOPERS "Joao Nunes"
 
 #define CLIENT_VERSION_MIN 800
 #define CLIENT_VERSION_MAX 800
@@ -39,6 +39,8 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <cstdint>
+
 
 #ifdef _WIN32
 #ifndef NOMINMAX

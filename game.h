@@ -34,6 +34,8 @@
 #include "wildcardtree.h"
 #include "quests.h"
 
+#include "familiars.h"
+
 class ServiceManager;
 class Creature;
 class Monster;
@@ -474,6 +476,8 @@ class Game
 		Map map;
 		Raids raids;
 		Quests quests;
+
+		Familiars familiars;
 
 	protected:
 		bool playerSayCommand(Player* player, const std::string& text);

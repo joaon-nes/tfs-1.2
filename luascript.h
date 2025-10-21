@@ -742,6 +742,7 @@ class LuaScriptInterface
 		static int luaCreatureChangeSpeed(lua_State* L);
 
 		static int luaCreatureSetDropLoot(lua_State* L);
+		static int luaCreatureSetLossSkill(lua_State* L);
 
 		static int luaCreatureGetPosition(lua_State* L);
 		static int luaCreatureGetTile(lua_State* L);
@@ -932,6 +933,8 @@ class LuaScriptInterface
 
 		// Monster
 		static int luaMonsterCreate(lua_State* L);
+
+		static int luaPlayerGetFamiliars(lua_State* L);
 
 		static int luaMonsterIsMonster(lua_State* L);
 

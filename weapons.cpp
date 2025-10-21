@@ -103,6 +103,9 @@ void Weapons::loadDefaults()
 				weapons[i] = weapon;
 				break;
 			}
+			case WEAPON_QUIVER: // <-- ADICIONAR ESTE BLOCO
+			case WEAPON_SHIELD: // <-- ADICIONAR ESTE CASE JUNTO AO QUIVER
+				break;
 
 			default:
 				break;
@@ -448,34 +451,14 @@ void Weapon::onUsedWeapon(Player* player, Item* item, Tile* destTile) const
 	}
 
 	switch (action) {
-	        case WEAPONACTION_REMOVECOUNT:
-		if (g_config.getBoolean(ConfigManager::REMOVE_WEAPON_AMMO)) {
-			uint32_t count = item->getItemCount();
-			if (count - 1 == 0)
-			{
-				uint32_t playerCount = player->getItemTypeCount(item->getID(), -1);
-				playerCount--;
-				if (playerCount > 0)
-				{
-					int32_t removeCount = std::max<int32_t>(1, std::min<int32_t>(100, playerCount));
-					bool test = player->removeItemOfType(item->getID(), removeCount, -1, true);
-					if (test)
-					{
-						g_game.transformItem(item, item->getID(), removeCount);
-						std::ostringstream ss;
-
-						ss << "Your " << item->getPluralName() << " were charged.";
-
-						player->sendTextMessage(MESSAGE_STATUS_SMALL, ss.str());
-						break;
-					}
-
-				}
+			case WEAPONACTION_REMOVECOUNT:
+			if (g_config.getBoolean(ConfigManager::REMOVE_WEAPON_AMMO)) {
+			const Tile* playerTile = player->getTile();
+			if (!playerTile || (!playerTile->hasFlag(TILESTATE_PROTECTIONZONE) || playerTile->hasFlag(TILESTATE_PVPZONE))) {
+				Weapon::decrementItemCount(item);
 			}
-			Weapon::decrementItemCount(item);
 		}
-		break;
-
+			break;
 	        case WEAPONACTION_REMOVECHARGE: {
 			uint16_t charges = item->getCharges();
 			if (charges != 0) {
