@@ -406,45 +406,66 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 			tmpStrValue = asLowerCaseString(valueAttribute.as_string());
 			if (tmpStrValue == "key") {
 				it.type = ITEM_TYPE_KEY;
-			} else if (tmpStrValue == "magicfield") {
+			}
+			else if (tmpStrValue == "magicfield") {
 				it.type = ITEM_TYPE_MAGICFIELD;
-			} else if (tmpStrValue == "container") {
+			}
+			else if (tmpStrValue == "container") {
 				it.group = ITEM_GROUP_CONTAINER;
 				it.type = ITEM_TYPE_CONTAINER;
-			} else if (tmpStrValue == "depot") {
+			}
+			else if (tmpStrValue == "depot") {
 				it.type = ITEM_TYPE_DEPOT;
-			} else if (tmpStrValue == "mailbox") {
+			}
+			else if (tmpStrValue == "mailbox") {
 				it.type = ITEM_TYPE_MAILBOX;
-			} else if (tmpStrValue == "trashholder") {
+			}
+			else if (tmpStrValue == "trashholder") {
 				it.type = ITEM_TYPE_TRASHHOLDER;
-			} else if (tmpStrValue == "teleport") {
+			}
+			else if (tmpStrValue == "teleport") {
 				it.type = ITEM_TYPE_TELEPORT;
-			} else if (tmpStrValue == "door") {
+			}
+			else if (tmpStrValue == "door") {
 				it.type = ITEM_TYPE_DOOR;
-			} else if (tmpStrValue == "bed") {
+			}
+			else if (tmpStrValue == "bed") {
 				it.type = ITEM_TYPE_BED;
-			} else if (tmpStrValue == "rune") {
+			}
+			else if (tmpStrValue == "rune") {
 				it.type = ITEM_TYPE_RUNE;
-			} else {
+			}
+			else {
 				std::cout << "[Warning - Items::parseItemNode] Unknown type: " << valueAttribute.as_string() << std::endl;
 			}
-		} else if (tmpStrValue == "description") {
+		}
+		else if (tmpStrValue == "description") {
 			it.description = valueAttribute.as_string();
-		} else if (tmpStrValue == "runespellname") {
+		}
+		else if (tmpStrValue == "runespellname") {
 			it.runeSpellName = valueAttribute.as_string();
-		} else if (tmpStrValue == "weight") {
+		}
+		else if (tmpStrValue == "weight") {
 			it.weight = pugi::cast<uint32_t>(valueAttribute.value());
-		} else if (tmpStrValue == "showcount") {
+		}
+		else if (tmpStrValue == "showcount") {
 			it.showCount = valueAttribute.as_bool();
-		} else if (tmpStrValue == "armor") {
+		}
+		else if (tmpStrValue == "armor") {
 			it.armor = pugi::cast<int32_t>(valueAttribute.value());
-		} else if (tmpStrValue == "defense") {
+		}
+		else if (tmpStrValue == "defense") {
 			it.defense = pugi::cast<int32_t>(valueAttribute.value());
-		} else if (tmpStrValue == "extradef") {
+		}
+		else if (tmpStrValue == "extradef") {
 			it.extraDefense = pugi::cast<int32_t>(valueAttribute.value());
-		} else if (tmpStrValue == "attack") {
+		}else if (tmpStrValue == "attack") {
 			it.attack = pugi::cast<int32_t>(valueAttribute.value());
-		} else if (tmpStrValue == "rotateto") {
+		}else if (tmpStrValue == "classification") {
+			it.classification = pugi::cast<int32_t>(valueAttribute.value());
+		}else if (tmpStrValue == "tier") {
+			it.tier = pugi::cast<int32_t>(valueAttribute.value());
+		}else if (tmpStrValue == "rotateto") {
 			it.rotateTo = pugi::cast<int32_t>(valueAttribute.value());
 		} else if (tmpStrValue == "moveable" || tmpStrValue == "movable") {
 			it.moveable = valueAttribute.as_bool();
@@ -558,7 +579,10 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 				it.weaponType = WEAPON_WAND;
 			} else if (tmpStrValue == "ammunition") {
 				it.weaponType = WEAPON_AMMO;
-			} else {
+			} else if (tmpStrValue == "quiver") { // <-- ADICIONAR ESTA LINHA
+				it.weaponType = WEAPON_QUIVER; // <-- ADICIONAR ESTA LINHA
+			}
+			else {
 				std::cout << "[Warning - Items::parseItemNode] Unknown weaponType: " << valueAttribute.as_string() << std::endl;
 			}
 		} else if (tmpStrValue == "slottype") {
@@ -681,6 +705,18 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 			it.getAbilities().stats[STAT_MAGICPOINTS] = pugi::cast<int32_t>(valueAttribute.value());
 		} else if (tmpStrValue == "magicpointspercent") {
 			it.getAbilities().statsPercent[STAT_MAGICPOINTS] = pugi::cast<int32_t>(valueAttribute.value());
+		} else if (tmpStrValue == "criticalhitchance") {
+			it.getAbilities().specialSkills[SPECIALSKILL_CRITICALHITCHANCE] = pugi::cast<int32_t>(valueAttribute.value());
+		} else if (tmpStrValue == "criticalhitamount") {
+			it.getAbilities().specialSkills[SPECIALSKILL_CRITICALHITAMOUNT] = pugi::cast<int32_t>(valueAttribute.value());
+		} else if (tmpStrValue == "manaleechchance") {
+			it.getAbilities().specialSkills[SPECIALSKILL_MANAPOINTSLEECHCHANCE] = pugi::cast<int32_t>(valueAttribute.value());
+		} else if (tmpStrValue == "manaleechamount") {
+			it.getAbilities().specialSkills[SPECIALSKILL_MANAPOINTSLEECHAMOUNT] = pugi::cast<int32_t>(valueAttribute.value());
+		} else if (tmpStrValue == "lifeleechchance") {
+			it.getAbilities().specialSkills[SPECIALSKILL_HITPOINTSLEECHCHANCE] = pugi::cast<int32_t>(valueAttribute.value());
+		} else if (tmpStrValue == "lifeleechamount") {
+			it.getAbilities().specialSkills[SPECIALSKILL_HITPOINTSLEECHAMOUNT] = pugi::cast<int32_t>(valueAttribute.value());
 		} else if (tmpStrValue == "fieldabsorbpercentenergy") {
 			it.getAbilities().fieldAbsorbPercent[combatTypeToIndex(COMBAT_ENERGYDAMAGE)] += pugi::cast<int16_t>(valueAttribute.value());
 		} else if (tmpStrValue == "fieldabsorbpercentfire") {
@@ -800,9 +836,10 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 				it.combatType = combatType;
 				it.conditionDamage.reset(conditionDamage);
 				uint32_t ticks = 0;
-				int32_t damage = 0;
 				int32_t start = 0;
 				int32_t count = 1;
+				int32_t initDamage = -1;
+				int32_t damage = 0;
 
 				for (auto subAttributeNode : attributeNode.children()) {
 					pugi::xml_attribute subKeyAttribute = subAttributeNode.attribute("key");
@@ -816,7 +853,9 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 					}
 
 					tmpStrValue = asLowerCaseString(subKeyAttribute.as_string());
-					if (tmpStrValue == "ticks") {
+					if (tmpStrValue == "initdamage") {
+						initDamage = pugi::cast<int32_t>(subValueAttribute.value());
+					} else if (tmpStrValue == "ticks") {
 						ticks = pugi::cast<uint32_t>(subValueAttribute.value());
 					} else if (tmpStrValue == "count") {
 						count = std::max<int32_t>(1, pugi::cast<int32_t>(subValueAttribute.value()));
@@ -837,6 +876,16 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 							conditionDamage->addDamage(count, ticks, damage);
 						}
 					}
+				}
+				
+				// datapack compatibility, presume damage to be initialdamage if initialdamage is not declared.
+				// initDamage = 0 (dont override initDamage with damage, dont set any initDamage)
+				// initDamage = -1 (undefined, override initDamage with damage)
+				if (initDamage > 0 || initDamage < -1) {
+					conditionDamage->setInitDamage(-initDamage);
+				}
+				else if (initDamage == -1 && start != 0) {
+					conditionDamage->setInitDamage(start);
 				}
 
 				conditionDamage->setParam(CONDITION_PARAM_FIELD, 1);

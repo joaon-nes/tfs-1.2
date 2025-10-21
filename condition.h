@@ -161,6 +161,7 @@ class ConditionAttributes final : public ConditionGeneric
 	protected:
 		int32_t skills[SKILL_LAST + 1];
 		int32_t skillsPercent[SKILL_LAST + 1];
+		int32_t specialSkills[SPECIALSKILL_LAST + 1] = {};
 		int32_t stats[STAT_LAST + 1];
 		int32_t statsPercent[STAT_LAST + 1];
 		int32_t currentSkill;
@@ -265,6 +266,10 @@ class ConditionDamage final : public Condition
 		}
 		int32_t getTotalDamage() const;
 
+		void setInitDamage(int32_t initDamage) {
+			this->initDamage = initDamage;
+		}
+		
 		//serialization
 		void serialize(PropWriteStream& propWriteStream) final;
 		bool unserializeProp(ConditionAttr_t attr, PropStream& propStream) final;
@@ -276,6 +281,7 @@ class ConditionDamage final : public Condition
 		int32_t periodDamage;
 		int32_t periodDamageTick;
 		int32_t tickInterval;
+		int32_t initDamage;
 
 		bool forceUpdate;
 		bool delayed;

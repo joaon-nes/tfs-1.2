@@ -97,6 +97,8 @@ enum AttrTypes_t {
 	ATTR_ARMOR = 31,
 	ATTR_HITCHANCE = 32,
 	ATTR_SHOOTRANGE = 33,
+	ATTR_CLASSIFICATION = 34,
+	ATTR_TIER = 35,
 };
 
 enum Attr_ReadValue {
@@ -604,6 +606,23 @@ class Item : virtual public Thing
 			}
 			return items[id].hitChance;
 		}
+
+		// NOVAS FUNÇÕES - INÍCIO
+		int32_t getClassification() const {
+			if (hasAttribute(ITEM_ATTRIBUTE_CLASSIFICATION)) {
+				return getIntAttr(ITEM_ATTRIBUTE_CLASSIFICATION);
+			}
+			return items[id].classification;
+		}
+
+		int32_t getTier() const {
+			if (hasAttribute(ITEM_ATTRIBUTE_TIER)) {
+				return getIntAttr(ITEM_ATTRIBUTE_TIER);
+			}
+			return items[id].tier;
+		}
+
+		// NOVAS FUNÇÕES - FIM
 
 		uint32_t getWorth() const;
 		void getLight(LightInfo& lightInfo) const;

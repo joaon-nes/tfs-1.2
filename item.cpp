@@ -890,6 +890,26 @@ std::string Item::getDescription(const ItemType& it, int32_t lookDistance,
 			if (hitChance != 0) {
 				s << ", Hit%" << std::showpos << static_cast<int16_t>(hitChance) << std::noshowpos;
 			}
+			if (it.abilities) {
+				if (it.abilities->specialSkills[SPECIALSKILL_CRITICALHITCHANCE] != 0) {
+					s << ", critical hit chance +" << it.abilities->specialSkills[SPECIALSKILL_CRITICALHITCHANCE] << '%';
+				}
+				if (it.abilities->specialSkills[SPECIALSKILL_CRITICALHITAMOUNT] != 0) {
+					s << ", critical extra damage +" << it.abilities->specialSkills[SPECIALSKILL_CRITICALHITAMOUNT] << '%';
+				}
+				if (it.abilities->specialSkills[SPECIALSKILL_HITPOINTSLEECHCHANCE] != 0) {
+					s << ", life leech chance +" << it.abilities->specialSkills[SPECIALSKILL_HITPOINTSLEECHCHANCE] << '%';
+				}
+				if (it.abilities->specialSkills[SPECIALSKILL_HITPOINTSLEECHAMOUNT] != 0) {
+					s << ", life leech amount +" << it.abilities->specialSkills[SPECIALSKILL_HITPOINTSLEECHAMOUNT] << '%';
+				}
+				if (it.abilities->specialSkills[SPECIALSKILL_MANAPOINTSLEECHCHANCE] != 0) {
+					s << ", mana leech chance +" << it.abilities->specialSkills[SPECIALSKILL_MANAPOINTSLEECHCHANCE] << '%';
+				}
+				if (it.abilities->specialSkills[SPECIALSKILL_MANAPOINTSLEECHAMOUNT] != 0) {
+					s << ", mana leech amount +" << it.abilities->specialSkills[SPECIALSKILL_MANAPOINTSLEECHAMOUNT] << '%';
+				}
+			}
 
 			s << ')';
 		} else if (it.weaponType != WEAPON_AMMO) {
@@ -943,6 +963,22 @@ std::string Item::getDescription(const ItemType& it, int32_t lookDistance,
 					}
 
 					s << getSkillName(i) << ' ' << std::showpos << it.abilities->skills[i] << std::noshowpos;
+				}
+
+				for (uint8_t i = SPECIALSKILL_FIRST; i <= SPECIALSKILL_LAST; i++) {
+					if (!it.abilities->specialSkills[i]) {
+						continue;
+					}
+
+					if (begin) {
+						begin = false;
+						s << " (";
+					}
+					else {
+						s << ", ";
+					}
+
+					s << getSpecialSkillName(i) << ' ' << std::showpos << it.abilities->specialSkills[i] << '%' << std::noshowpos;
 				}
 
 				if (it.abilities->stats[STAT_MAGICPOINTS]) {
@@ -1210,8 +1246,9 @@ std::string Item::getDescription(const ItemType& it, int32_t lookDistance,
 		uint32_t volume = 0;
 		if (!item || !item->hasAttribute(ITEM_ATTRIBUTE_UNIQUEID)) {
 			if (it.isContainer()) {
-				volume = it.maxItems;
-			} else {
+				volume = item->getName() == "Quiver" ? 4 : it.maxItems;
+			}
+			else {
 				volume = item->getContainer()->capacity();
 			}
 		}
@@ -1294,6 +1331,17 @@ std::string Item::getDescription(const ItemType& it, int32_t lookDistance,
 			}
 		}
 	}
+
+	// NOVOS SISTEMAS
+
+	int32_t classification = item ? item->getClassification() : it.classification;
+	int32_t tier = item ? item->getTier() : it.tier;
+
+	if (classification > 0) {
+		s << "\nClassification: " << classification << " Tier: " << tier;
+	}
+
+	// NOVOS SISTEMAS - FIM
 
 	if (it.showCharges) {
 		s << " that has " << subType << " charge" << (subType != 1 ? "s" : "") << " left";

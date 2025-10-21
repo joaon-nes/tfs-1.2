@@ -202,6 +202,7 @@ Condition* Condition::createCondition(ConditionId_t _id, ConditionType_t _type, 
 		case CONDITION_YELLTICKS:
 		case CONDITION_PACIFIED:
 		case CONDITION_MANASHIELD:
+		case CONDITION_FAMILIAR:
 			return new ConditionGeneric(_id, _type, _ticks, _buff, _subId);
 
 		default:
@@ -373,6 +374,7 @@ void ConditionAttributes::addCondition(Creature* creature, const Condition* addC
 
 		//Apply the new one
 		memcpy(skills, conditionAttrs.skills, sizeof(skills));
+		memcpy(specialSkills, conditionAttrs.specialSkills, sizeof(specialSkills));
 		memcpy(skillsPercent, conditionAttrs.skillsPercent, sizeof(skillsPercent));
 		memcpy(stats, conditionAttrs.stats, sizeof(stats));
 		memcpy(statsPercent, conditionAttrs.statsPercent, sizeof(statsPercent));
@@ -497,6 +499,13 @@ void ConditionAttributes::updateSkills(Player* player)
 		}
 	}
 
+	for (int32_t i = SPECIALSKILL_FIRST; i <= SPECIALSKILL_LAST; ++i) {
+		if (specialSkills[i]) {
+			needUpdateSkills = true;
+			player->setVarSpecialSkill(static_cast<SpecialSkills_t>(i), specialSkills[i]);
+		}
+	}
+
 	if (needUpdateSkills) {
 		player->sendSkills();
 	}
@@ -517,6 +526,13 @@ void ConditionAttributes::endCondition(Creature* creature)
 			if (skills[i] || skillsPercent[i]) {
 				needUpdateSkills = true;
 				player->setVarSkill(static_cast<skills_t>(i), -skills[i]);
+			}
+		}
+
+		for (int32_t i = SPECIALSKILL_FIRST; i <= SPECIALSKILL_LAST; ++i) {
+			if (specialSkills[i]) {
+				needUpdateSkills = true;
+				player->setVarSpecialSkill(static_cast<SpecialSkills_t>(i), -specialSkills[i]);
 			}
 		}
 
@@ -664,6 +680,36 @@ bool ConditionAttributes::setParam(ConditionParam_t param, int32_t value)
 
 		case CONDITION_PARAM_DISABLE_DEFENSE: {
 			disableDefense = (value != 0);
+			return true;
+		}
+
+		case CONDITION_PARAM_SPECIALSKILL_CRITICALHITCHANCE: {
+			specialSkills[SPECIALSKILL_CRITICALHITCHANCE] = value;
+			return true;
+		}
+
+		case CONDITION_PARAM_SPECIALSKILL_CRITICALHITAMOUNT: {
+			specialSkills[SPECIALSKILL_CRITICALHITAMOUNT] = value;
+			return true;
+		}
+
+		case CONDITION_PARAM_SPECIALSKILL_HITPOINTSLEECHCHANCE: {
+			specialSkills[SPECIALSKILL_HITPOINTSLEECHCHANCE] = value;
+			return true;
+		}
+
+		case CONDITION_PARAM_SPECIALSKILL_HITPOINTSLEECHAMOUNT: {
+			specialSkills[SPECIALSKILL_HITPOINTSLEECHAMOUNT] = value;
+			return true;
+		}
+
+		case CONDITION_PARAM_SPECIALSKILL_MANAPOINTSLEECHCHANCE: {
+			specialSkills[SPECIALSKILL_MANAPOINTSLEECHCHANCE] = value;
+			return true;
+		}
+
+		case CONDITION_PARAM_SPECIALSKILL_MANAPOINTSLEECHAMOUNT: {
+			specialSkills[SPECIALSKILL_MANAPOINTSLEECHAMOUNT] = value;
 			return true;
 		}
 
@@ -892,6 +938,7 @@ ConditionDamage::ConditionDamage(ConditionId_t _id, ConditionType_t _type, bool 
 	periodDamage = 0;
 	periodDamageTick = 0;
 	tickInterval = 2000;
+	initDamage = 0;
 }
 
 bool ConditionDamage::setParam(ConditionParam_t param, int32_t value)
@@ -1066,15 +1113,15 @@ bool ConditionDamage::startCondition(Creature* creature)
 		return false;
 	}
 
+	if (!delayed) {
+		// delayed condition does no initial damage
+		if (!doDamage(creature, initDamage)) {
+			return false;
+		}
+	}
+	
 	if (!init()) {
 		return false;
-	}
-
-	if (!delayed) {
-		int32_t damage;
-		if (getNextDamage(damage)) {
-			return doDamage(creature, damage);
-		}
 	}
 	return true;
 }
@@ -1137,8 +1184,8 @@ bool ConditionDamage::getNextDamage(int32_t& damage)
 
 bool ConditionDamage::doDamage(Creature* creature, int32_t healthChange)
 {
-	if (creature->isSuppress(getType())) {
-		return true;
+	if (creature->isSuppress(getType()) || creature->isImmune(getType())) {
+		return false;
 	}
 
 	if (field && creature->getPlayer()) {
@@ -1161,6 +1208,7 @@ bool ConditionDamage::doDamage(Creature* creature, int32_t healthChange)
 	if (g_game.combatBlockHit(damage, attacker, creature, false, false, field)) {
 		return false;
 	}
+	
 	return g_game.combatChangeHealth(attacker, creature, damage);
 }
 

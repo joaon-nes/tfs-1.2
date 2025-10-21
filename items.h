@@ -90,6 +90,7 @@ struct Abilities {
 
 	//extra skill modifiers
 	int32_t skills[SKILL_LAST + 1];
+	int32_t specialSkills[SPECIALSKILL_LAST + 1] = { 0 };
 
 	int32_t speed;
 
@@ -222,6 +223,12 @@ class ItemType
 		int32_t rotateTo;
 		int32_t runeMagLevel;
 		int32_t runeLevel;
+
+
+		// Novos Atributos
+		int32_t classification;
+		int32_t tier;
+		//
 
 		CombatType_t combatType;
 

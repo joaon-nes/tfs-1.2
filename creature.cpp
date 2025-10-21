@@ -623,8 +623,10 @@ void Creature::onCreatureMove(Creature* creature, const Tile* newTile, const Pos
 
 	if (creature == followCreature || (creature == this && followCreature)) {
 		if (hasFollowPath) {
-			isUpdatingPath = false;
-			g_dispatcher.addTask(createTask(std::bind(&Game::updateCreatureWalk, &g_game, getID())));
+			if (getWalkDelay() <= 0) {
+				g_dispatcher.addTask(createTask(std::bind(&Game::updateCreatureWalk, &g_game, getID())));
+			}
+			isUpdatingPath = true;
 		}
 
 		if (newPos.z != oldPos.z || !canSee(followCreature->getPosition())) {
@@ -1334,6 +1336,11 @@ void Creature::executeConditions(uint32_t interval)
 		if (!condition->executeCondition(this, interval)) {
 			ConditionType_t type = condition->getType();
 
+			if (type == CONDITION_FAMILIAR) {
+				g_game.removeCreature(this, true);
+				g_game.addMagicEffect(getPosition(), CONST_ME_POFF);
+			}
+
 			it = conditions.erase(it);
 
 			condition->endCondition(this);
@@ -1358,7 +1365,7 @@ bool Creature::hasCondition(ConditionType_t type, uint32_t subId/* = 0*/) const
 			continue;
 		}
 
-		if (condition->getEndTime() >= timeNow) {
+		if (condition->getEndTime() >= timeNow || condition->getTicks() == -1) {
 			return true;
 		}
 	}

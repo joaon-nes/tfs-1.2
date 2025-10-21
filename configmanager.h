@@ -46,7 +46,9 @@ class ConfigManager
 			CONVERT_UNSAFE_SCRIPTS,
 			CLASSIC_EQUIPMENT_SLOTS,
 			CLASSIC_ATTACK_SPEED,
+			PLAYER_CONSOLE_LOGS,
 			HOUSE_ANTI_TRASH,
+			ONLY_INVITED_CAN_MOVE_HOUSE_ITEMS,
 			AUTO_STACK_ITEMS,
 			LOOT_MESSAGE,
 			REMOVE_WEAPON_AMMO,
@@ -110,6 +112,7 @@ class ConfigManager
 
 			LAST_INTEGER_CONFIG /* this must be the last one */
 		};
+
 
 		bool load();
 		bool reload();

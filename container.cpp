@@ -249,8 +249,20 @@ void Container::onRemoveContainerItem(uint32_t index, Item* item)
 }
 
 ReturnValue Container::queryAdd(int32_t index, const Thing& thing, uint32_t count,
-		uint32_t flags, Creature* actor/* = nullptr*/) const
+	uint32_t flags, Creature* actor/* = nullptr*/) const
 {
+	const Item* item = thing.getItem();
+	if (item == nullptr) {
+		return RETURNVALUE_NOTPOSSIBLE;
+	}
+
+	// QUIVER SYSTEM
+	if (getWeaponType() == WEAPON_QUIVER) {
+		if (item->getWeaponType() != WEAPON_AMMO) {
+			return RETURNVALUE_NOTPOSSIBLE;
+		}
+	}
+
 	bool childIsOwner = hasBitSet(FLAG_CHILDISOWNER, flags);
 	if (childIsOwner) {
 		//a child container is querying, since we are the top container (not carried by a player)
@@ -259,11 +271,6 @@ ReturnValue Container::queryAdd(int32_t index, const Thing& thing, uint32_t coun
 	}
 
 	if (!unlocked) {
-		return RETURNVALUE_NOTPOSSIBLE;
-	}
-
-	const Item* item = thing.getItem();
-	if (item == nullptr) {
 		return RETURNVALUE_NOTPOSSIBLE;
 	}
 
@@ -288,7 +295,8 @@ ReturnValue Container::queryAdd(int32_t index, const Thing& thing, uint32_t coun
 		if (index == INDEX_WHEREEVER && size() >= capacity()) {
 			return RETURNVALUE_CONTAINERNOTENOUGHROOM;
 		}
-	} else {
+	}
+	else {
 		while (cylinder) {
 			if (cylinder == &thing) {
 				return RETURNVALUE_THISISIMPOSSIBLE;
@@ -301,18 +309,27 @@ ReturnValue Container::queryAdd(int32_t index, const Thing& thing, uint32_t coun
 	const Cylinder* topParent = getTopParent();
 	if (topParent != this) {
 		return topParent->queryAdd(INDEX_WHEREEVER, *item, count, flags | FLAG_CHILDISOWNER, actor);
-	} else {
+	}
+	else {
 		return RETURNVALUE_NOERROR;
 	}
 }
 
 ReturnValue Container::queryMaxCount(int32_t index, const Thing& thing, uint32_t count,
-		uint32_t& maxQueryCount, uint32_t flags) const
+	uint32_t& maxQueryCount, uint32_t flags) const
 {
 	const Item* item = thing.getItem();
 	if (item == nullptr) {
 		maxQueryCount = 0;
 		return RETURNVALUE_NOTPOSSIBLE;
+	}
+
+	// QUIVER SYSTEM
+	if (getWeaponType() == WEAPON_QUIVER) {
+		if (item->getWeaponType() != WEAPON_AMMO) {
+			maxQueryCount = 0;
+			return RETURNVALUE_NOTPOSSIBLE;
+		}
 	}
 
 	if (hasBitSet(FLAG_NOLIMIT, flags)) {
@@ -335,7 +352,8 @@ ReturnValue Container::queryMaxCount(int32_t index, const Thing& thing, uint32_t
 					}
 				}
 			}
-		} else {
+		}
+		else {
 			const Item* destItem = getItemByIndex(index);
 			if (item->equals(destItem) && !destItem->isRune() && destItem->getItemCount() < 100) {
 				if (queryAdd(index, *item, count, flags) == RETURNVALUE_NOERROR) {
@@ -348,7 +366,8 @@ ReturnValue Container::queryMaxCount(int32_t index, const Thing& thing, uint32_t
 		if (maxQueryCount < count) {
 			return RETURNVALUE_CONTAINERNOTENOUGHROOM;
 		}
-	} else {
+	}
+	else {
 		maxQueryCount = freeSlots;
 		if (maxQueryCount == 0) {
 			return RETURNVALUE_CONTAINERNOTENOUGHROOM;
@@ -357,7 +376,7 @@ ReturnValue Container::queryMaxCount(int32_t index, const Thing& thing, uint32_t
 	return RETURNVALUE_NOERROR;
 }
 
-ReturnValue Container::queryRemove(const Thing& thing, uint32_t count, uint32_t flags) const
+ReturnValue Container::queryRemove(const Thing& thing, uint32_t count, uint32_t flags, Creature* actor /*= nullptr */) const
 {
 	int32_t index = getThingIndex(&thing);
 	if (index == -1) {
@@ -376,12 +395,29 @@ ReturnValue Container::queryRemove(const Thing& thing, uint32_t count, uint32_t 
 	if (!item->isMoveable() && !hasBitSet(FLAG_IGNORENOTMOVEABLE, flags)) {
 		return RETURNVALUE_NOTMOVEABLE;
 	}
+	
+	const HouseTile* houseTile = dynamic_cast<const HouseTile*>(getTopParent());
+	if (houseTile) {
+		return houseTile->queryRemove(thing, count, flags, actor);
+	}
 	return RETURNVALUE_NOERROR;
 }
 
-Cylinder* Container::queryDestination(int32_t& index, const Thing &thing, Item** destItem,
-		uint32_t& flags)
+Cylinder* Container::queryDestination(int32_t& index, const Thing& thing, Item** destItem,
+	uint32_t& flags)
 {
+	const Item* item = thing.getItem();
+	if (!item) {
+		return this;
+	}
+
+	// QUIVER SYSTEM
+	if (getWeaponType() == WEAPON_QUIVER) {
+		if (item->getWeaponType() != WEAPON_AMMO) {
+			return this;
+		}
+	}
+
 	if (!unlocked) {
 		*destItem = nullptr;
 		return this;
@@ -401,7 +437,8 @@ Cylinder* Container::queryDestination(int32_t& index, const Thing &thing, Item**
 	if (index == 255 /*add wherever*/) {
 		index = INDEX_WHEREEVER;
 		*destItem = nullptr;
-	} else if (index >= static_cast<int32_t>(capacity())) {
+	}
+	else if (index >= static_cast<int32_t>(capacity())) {
 		/*
 		if you have a container, maximize it to show all 20 slots
 		then you open a bag that is inside the container you will have a bag with 8 slots
@@ -411,11 +448,6 @@ Cylinder* Container::queryDestination(int32_t& index, const Thing &thing, Item**
 		*/
 		index = INDEX_WHEREEVER;
 		*destItem = nullptr;
-	}
-
-	const Item* item = thing.getItem();
-	if (!item) {
-		return this;
 	}
 
 	if (index != INDEX_WHEREEVER) {

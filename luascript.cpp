@@ -1122,6 +1122,7 @@ void LuaScriptInterface::registerFunctions()
 	registerEnum(CONDITION_EXHAUST_COMBAT)
 	registerEnum(CONDITION_EXHAUST_HEAL)
 	registerEnum(CONDITION_PACIFIED)
+	registerEnum(CONDITION_FAMILIAR)
 
 	registerEnum(CONDITIONID_DEFAULT)
 	registerEnum(CONDITIONID_COMBAT)
@@ -1180,6 +1181,12 @@ void LuaScriptInterface::registerFunctions()
 	registerEnum(CONDITION_PARAM_SUBID)
 	registerEnum(CONDITION_PARAM_FIELD)
 	registerEnum(CONDITION_PARAM_DISABLE_DEFENSE)
+	registerEnum(CONDITION_PARAM_SPECIALSKILL_CRITICALHITCHANCE)
+	registerEnum(CONDITION_PARAM_SPECIALSKILL_CRITICALHITAMOUNT)
+	registerEnum(CONDITION_PARAM_SPECIALSKILL_HITPOINTSLEECHCHANCE)
+	registerEnum(CONDITION_PARAM_SPECIALSKILL_HITPOINTSLEECHAMOUNT)
+	registerEnum(CONDITION_PARAM_SPECIALSKILL_MANAPOINTSLEECHCHANCE)
+	registerEnum(CONDITION_PARAM_SPECIALSKILL_MANAPOINTSLEECHAMOUNT)
 
 	registerEnum(CONST_ME_NONE)
 	registerEnum(CONST_ME_DRAWBLOOD)
@@ -1267,6 +1274,97 @@ void LuaScriptInterface::registerFunctions()
 	registerEnum(CONST_ME_RAGIAZ_BONECAPSULE)
 	registerEnum(CONST_ME_CRITICAL_DAMAGE)
 	registerEnum(CONST_ME_PLUNGING_FISH)
+	registerEnum(CONST_ME_BLUE_ENERGY_SPARK)
+	registerEnum(CONST_ME_ORANGE_ENERGY_SPARK)
+	registerEnum(CONST_ME_GREEN_ENERGY_SPARK)
+	registerEnum(CONST_ME_PINK_ENERGY_SPARK)
+	registerEnum(CONST_ME_WHITE_ENERGY_SPARK)
+	registerEnum(CONST_ME_YELLOW_ENERGY_SPARK)
+	registerEnum(CONST_ME_MAGIC_POWDER)
+	registerEnum(CONST_ME_PIXIE_EXPLOSION)
+	registerEnum(CONST_ME_PIXIE_COMING)
+	registerEnum(CONST_ME_PIXIE_GOING)
+	registerEnum(CONST_ME_STORM)
+	registerEnum(CONST_ME_STONE_STORM)
+	registerEnum(CONST_ME_BLUE_GHOST)
+	registerEnum(CONST_ME_PINK_VORTEX)
+	registerEnum(CONST_ME_TREASURE_MAP)
+	registerEnum(CONST_ME_PINK_BEAM)
+	registerEnum(CONST_ME_GREEN_FIREWORKS)
+	registerEnum(CONST_ME_ORANGE_FIREWORKS)
+	registerEnum(CONST_ME_PINK_FIREWORKS)
+	registerEnum(CONST_ME_BLUE_FIREWORKS)
+	registerEnum(CONST_ME_SUPREME_CUBE)
+	registerEnum(CONST_ME_BLACK_BLOOD)
+	registerEnum(CONST_ME_PRISMATIC_SPARK)
+	registerEnum(CONST_ME_THAIAN)
+	registerEnum(CONST_ME_THAIAN_GHOST)
+	registerEnum(CONST_ME_GHOST_SMOKE)
+	registerEnum(CONST_ME_WATER_BLOCK_FLOATING)
+	registerEnum(CONST_ME_WATER_BLOCK)
+	registerEnum(CONST_ME_ROOTS)
+	registerEnum(CONST_ME_GHOSTLY_SCRATCH)
+	registerEnum(CONST_ME_GHOSTLY_BITE)
+	registerEnum(CONST_ME_BIG_SCRATCH)
+	registerEnum(CONST_ME_SLASH)
+	registerEnum(CONST_ME_BITE)
+	registerEnum(CONST_ME_CHIVALRIOUS_CHALLENGE)
+	registerEnum(CONST_ME_DIVINE_DAZZLE)
+	registerEnum(CONST_ME_ELECTRICALSPARK)
+	registerEnum(CONST_ME_PURPLETELEPORT)
+	registerEnum(CONST_ME_REDTELEPORT)
+	registerEnum(CONST_ME_ORANGETELEPORT)
+	registerEnum(CONST_ME_GREYTELEPORT)
+	registerEnum(CONST_ME_LIGHTBLUETELEPORT)
+	registerEnum(CONST_ME_FATAL)
+	registerEnum(CONST_ME_DODGE)
+	registerEnum(CONST_ME_HOURGLASS)
+	registerEnum(CONST_ME_DAZZLING)
+	registerEnum(CONST_ME_SPARKLING)
+	registerEnum(CONST_ME_FERUMBRAS_1)
+	registerEnum(CONST_ME_GAZHARAGOTH)
+	registerEnum(CONST_ME_MAD_MAGE)
+	registerEnum(CONST_ME_HORESTIS)
+	registerEnum(CONST_ME_DEVOVORGA)
+	registerEnum(CONST_ME_FERUMBRAS_2)
+	registerEnum(CONST_ME_WHITE_SMOKE)
+	registerEnum(CONST_ME_WHITE_SMOKES)
+	registerEnum(CONST_ME_WATER_DROP)
+	registerEnum(CONST_ME_AVATAR_APPEAR)
+	registerEnum(CONST_ME_DIVINE_GRENADE)
+	registerEnum(CONST_ME_DIVINE_EMPOWERMENT)
+	registerEnum(CONST_ME_WATER_FLOATING_THRASH)
+	registerEnum(CONST_ME_AGONY)
+	registerEnum(CONST_ME_MELTING_CREAM)
+	registerEnum(CONST_ME_REAPER)
+	registerEnum(CONST_ME_POWERFUL_HEARTS)
+	registerEnum(CONST_ME_CREAM)
+	registerEnum(CONST_ME_GENTLE_BUBBLE)
+	registerEnum(CONST_ME_STARBURST)
+	registerEnum(CONST_ME_SIURP)
+	registerEnum(CONST_ME_CACAO)
+	registerEnum(CONST_ME_CANDY_FLOSS)
+	registerEnum(CONST_ME_GREEN_HITAREA)
+	registerEnum(CONST_ME_RED_HITAREA)
+	registerEnum(CONST_ME_BLUE_HITAREA)
+	registerEnum(CONST_ME_YELLOW_HITAREA)
+	registerEnum(CONST_ME_WHITE_FLURRYOFBLOWS)
+	registerEnum(CONST_ME_GREEN_FLURRYOFBLOWS)
+	registerEnum(CONST_ME_PINK_FLURRYOFBLOWS)
+	registerEnum(CONST_ME_WHITE_ENERGYPULSE)
+	registerEnum(CONST_ME_GREEN_ENERGYPULSE)
+	registerEnum(CONST_ME_PINK_ENERGYPULSE)
+	registerEnum(CONST_ME_WHITE_TIGERCLASH)
+	registerEnum(CONST_ME_GREEN_TIGERCLASH)
+	registerEnum(CONST_ME_PINK_TIGERCLASH)
+	registerEnum(CONST_ME_WHITE_EXPLOSIONHIT)
+	registerEnum(CONST_ME_GREEN_EXPLOSIONHIT)
+	registerEnum(CONST_ME_BLUE_EXPLOSIONHIT)
+	registerEnum(CONST_ME_PINK_EXPLOSIONHIT)
+	registerEnum(CONST_ME_WHITE_ENERGYSHOCK)
+	registerEnum(CONST_ME_GREEN_ENERGYSHOCK)
+	registerEnum(CONST_ME_YELLOW_ENERGYSHOCK)
+
 
 	registerEnum(CONST_ANI_NONE)
 	registerEnum(CONST_ANI_SPEAR)
@@ -1319,6 +1417,12 @@ void LuaScriptInterface::registerFunctions()
 	registerEnum(CONST_ANI_ENVENOMEDARROW)
 	registerEnum(CONST_ANI_GLOOTHSPEAR)
 	registerEnum(CONST_ANI_SIMPLEARROW)
+	registerEnum(CONST_ANI_LEAFSTAR)
+	registerEnum(CONST_ANI_DIAMONDARROW)
+	registerEnum(CONST_ANI_SPECTRALBOLT)
+	registerEnum(CONST_ANI_ROYALSTAR)
+	registerEnum(CONST_ANI_CANDYCANE)
+	registerEnum(CONST_ANI_CHERRYBOMB)
 	registerEnum(CONST_ANI_WEAPONTYPE)
 
 	registerEnum(CONST_PROP_BLOCKSOLID)
@@ -1801,6 +1905,7 @@ void LuaScriptInterface::registerFunctions()
 	registerEnumIn("configKeys", ConfigManager::STAIRHOP_DELAY)
 	registerEnumIn("configKeys", ConfigManager::EXP_FROM_PLAYERS_LEVEL_RANGE)
 	registerEnumIn("configKeys", ConfigManager::MAX_PACKETS_PER_SECOND)
+	registerEnumIn("configKeys", ConfigManager::PLAYER_CONSOLE_LOGS)
 
 	// os
 	registerMethod("os", "mtime", LuaScriptInterface::luaSystemTime);
@@ -2007,7 +2112,6 @@ void LuaScriptInterface::registerFunctions()
 	registerMethod("Creature", "isRemoved", LuaScriptInterface::luaCreatureIsRemoved);
 	registerMethod("Creature", "isCreature", LuaScriptInterface::luaCreatureIsCreature);
 	registerMethod("Creature", "isInGhostMode", LuaScriptInterface::luaCreatureIsInGhostMode);
-	registerMethod("Creature", "isHealthHidden", LuaScriptInterface::luaCreatureIsHealthHidden);
 
 	registerMethod("Creature", "canSee", LuaScriptInterface::luaCreatureCanSee);
 	registerMethod("Creature", "canSeeCreature", LuaScriptInterface::luaCreatureCanSeeCreature);
@@ -2034,6 +2138,7 @@ void LuaScriptInterface::registerFunctions()
 	registerMethod("Creature", "changeSpeed", LuaScriptInterface::luaCreatureChangeSpeed);
 
 	registerMethod("Creature", "setDropLoot", LuaScriptInterface::luaCreatureSetDropLoot);
+	registerMethod("Creature", "setLossSkill", LuaScriptInterface::luaCreatureSetLossSkill);
 
 	registerMethod("Creature", "getPosition", LuaScriptInterface::luaCreatureGetPosition);
 	registerMethod("Creature", "getTile", LuaScriptInterface::luaCreatureGetTile);
@@ -2044,6 +2149,8 @@ void LuaScriptInterface::registerFunctions()
 	registerMethod("Creature", "addHealth", LuaScriptInterface::luaCreatureAddHealth);
 	registerMethod("Creature", "getMaxHealth", LuaScriptInterface::luaCreatureGetMaxHealth);
 	registerMethod("Creature", "setMaxHealth", LuaScriptInterface::luaCreatureSetMaxHealth);
+	
+	registerMethod("Creature", "isHealthHidden", LuaScriptInterface::luaCreatureIsHealthHidden);
 	registerMethod("Creature", "setHiddenHealth", LuaScriptInterface::luaCreatureSetHiddenHealth);
 
 	registerMethod("Creature", "getMana", LuaScriptInterface::luaCreatureGetMana);
@@ -2075,6 +2182,8 @@ void LuaScriptInterface::registerFunctions()
 	// Player
 	registerClass("Player", "Creature", LuaScriptInterface::luaPlayerCreate);
 	registerMetaMethod("Player", "__eq", LuaScriptInterface::luaUserdataCompare);
+
+	registerMethod("Player", "getFamiliars", LuaScriptInterface::luaPlayerGetFamiliars);
 
 	registerMethod("Player", "isPlayer", LuaScriptInterface::luaPlayerIsPlayer);
 
@@ -6415,18 +6524,6 @@ int LuaScriptInterface::luaCreatureIsInGhostMode(lua_State* L)
 	return 1;
 }
 
-int LuaScriptInterface::luaCreatureIsHealthHidden(lua_State* L)
-{
-	// creature:isHealthHidden()
-	const Creature* creature = getUserdata<const Creature>(L, 1);
-	if (creature) {
-		pushBoolean(L, creature->isHealthHidden());
-	} else {
-		lua_pushnil(L);
-	}
-	return 1;
-}
-
 int LuaScriptInterface::luaCreatureCanSee(lua_State* L)
 {
 	// creature:canSee(position)
@@ -6691,6 +6788,20 @@ int LuaScriptInterface::luaCreatureSetDropLoot(lua_State* L)
 	return 1;
 }
 
+int LuaScriptInterface::luaCreatureSetLossSkill(lua_State* L)
+{
+	// creature:setLossSkill(skillLoss)
+	Creature* creature = getUserdata<Creature>(L, 1);
+	if (creature) {
+		creature->setLossSkill(getBoolean(L, 2));
+		pushBoolean(L, true);
+	}
+	else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
 int LuaScriptInterface::luaCreatureGetPosition(lua_State* L)
 {
 	// creature:getPosition()
@@ -6808,6 +6919,18 @@ int LuaScriptInterface::luaCreatureSetMaxHealth(lua_State* L)
 		player->sendStats();
 	}
 	pushBoolean(L, true);
+	return 1;
+}
+
+int LuaScriptInterface::luaCreatureIsHealthHidden(lua_State* L)
+{
+	// creature:isHealthHidden()
+	const Creature* creature = getUserdata<const Creature>(L, 1);
+	if (creature) {
+		pushBoolean(L, creature->isHealthHidden());
+	} else {
+		lua_pushnil(L);
+	}
 	return 1;
 }
 
@@ -7348,8 +7471,7 @@ int LuaScriptInterface::luaPlayerGetDepotLocker(lua_State* L)
 	if (depotLocker) {
 		pushUserdata<Item>(L, depotLocker);
 		setItemMetatable(L, -1, depotLocker);
-	}
-	else {
+	} else {
 		pushBoolean(L, false);
 	}
 	return 1;
@@ -11929,4 +12051,28 @@ void LuaEnvironment::executeTimerEvent(uint32_t eventIndex)
 	for (auto parameter : timerEventDesc.parameters) {
 		luaL_unref(luaState, LUA_REGISTRYINDEX, parameter);
 	}
+}
+
+int LuaScriptInterface::luaPlayerGetFamiliars(lua_State* L)
+{
+	Player* player = getUserdata<Player>(L, 1);
+	if (!player) {
+		lua_pushnil(L);
+		return 1;
+	}
+	const std::vector<Familiar>& familiars = player->getFamiliars();
+	lua_createtable(L, familiars.size(), 0);
+
+	int index = 0;
+	for (const auto& familiar : familiars) {
+		lua_createtable(L, 0, 6);
+		setField(L, "name", familiar.name);
+		setField(L, "lookType", familiar.lookType);
+		setField(L, "premium", familiar.premium);
+		setField(L, "unlocked", familiar.unlocked);
+		setField(L, "enabled", familiar.enabled);
+		setField(L, "type", familiar.type);
+		lua_rawseti(L, -2, ++index);
+	}
+	return 1;
 }

@@ -34,6 +34,8 @@
 #include "scheduler.h"
 #include "weapons.h"
 
+#include "familiars.h"
+
 extern ConfigManager g_config;
 extern Game g_game;
 extern Chat* g_chat;
@@ -46,6 +48,11 @@ extern Events* g_events;
 MuteCountMap Player::muteCountMap;
 
 uint32_t Player::playerAutoID = 0x10000000;
+
+const std::vector<Familiar>& Player::getFamiliars() const
+{
+	return g_game.familiars.getFamiliarsForVocation(getVocationId());
+}
 
 Player::Player(ProtocolGame_ptr p) :
 	Creature(), inventory(), client(p), varSkills(), varStats(), inventoryAbilities()
@@ -197,12 +204,15 @@ std::string Player::getDescription(int32_t lookDistance) const
 
 		if (group->access) {
 			s << " You are " << group->name << '.';
-		} else if (vocation->getId() != VOCATION_NONE) {
+		}
+		else if (vocation->getId() != VOCATION_NONE) {
 			s << " You are " << vocation->getVocDescription() << '.';
-		} else {
+		}
+		else {
 			s << " You have no vocation.";
 		}
-	} else {
+	}
+	else {
 		s << name;
 		if (!group->access) {
 			s << " (Level " << level << ')';
@@ -211,15 +221,18 @@ std::string Player::getDescription(int32_t lookDistance) const
 
 		if (sex == PLAYERSEX_FEMALE) {
 			s << " She";
-		} else {
+		}
+		else {
 			s << " He";
 		}
 
 		if (group->access) {
 			s << " is " << group->name << '.';
-		} else if (vocation->getId() != VOCATION_NONE) {
+		}
+		else if (vocation->getId() != VOCATION_NONE) {
 			s << " is " << vocation->getVocDescription() << '.';
-		} else {
+		}
+		else {
 			s << " has no vocation.";
 		}
 	}
@@ -229,9 +242,11 @@ std::string Player::getDescription(int32_t lookDistance) const
 		if (rank) {
 			if (lookDistance == -1) {
 				s << " You are ";
-			} else if (sex == PLAYERSEX_FEMALE) {
+			}
+			else if (sex == PLAYERSEX_FEMALE) {
 				s << " She is ";
-			} else {
+			}
+			else {
 				s << " He is ";
 			}
 
@@ -239,11 +254,24 @@ std::string Player::getDescription(int32_t lookDistance) const
 			if (!guildNick.empty()) {
 				s << " (" << guildNick << ')';
 			}
-
+			s << '.';
 		}
 	}
+
+	// Adiciona os resets ao final da descrição
+	s << " [Resets: " << resets << "]";
+
+	const Condition* familiarCondition = getCondition(CONDITION_FAMILIAR);
+	if (familiarCondition) {
+		int64_t remainingTicks = familiarCondition->getTicks();
+		if (remainingTicks > 0) {
+			s << "\nIt will disappear in " << std::to_string(remainingTicks / 1000) << " seconds.";
+		}
+	}
+
 	return s.str();
 }
+
 
 Item* Player::getInventoryItem(slots_t slot) const
 {
@@ -271,18 +299,44 @@ Item* Player::getWeapon(slots_t slot, bool ignoreAmmo) const
 	}
 
 	WeaponType_t weaponType = item->getWeaponType();
-	if (weaponType == WEAPON_NONE || weaponType == WEAPON_SHIELD || weaponType == WEAPON_AMMO) {
+	// Impede que quivers e escudos sejam considerados "armas" diretamente
+	if (weaponType == WEAPON_NONE || weaponType == WEAPON_SHIELD || weaponType == WEAPON_QUIVER || weaponType == WEAPON_AMMO) {
 		return nullptr;
 	}
 
 	if (!ignoreAmmo && weaponType == WEAPON_DISTANCE) {
 		const ItemType& it = Item::items[item->getID()];
 		if (it.ammoType != AMMO_NONE) {
-			Item* ammoItem = inventory[CONST_SLOT_AMMO];
-			if (!ammoItem || ammoItem->getAmmoType() != it.ammoType) {
-				return nullptr;
+			// Lista de possíveis fontes de munição
+			std::vector<Item*> ammoSources;
+			if (inventory[CONST_SLOT_AMMO]) {
+				ammoSources.push_back(inventory[CONST_SLOT_AMMO]);
 			}
-			item = ammoItem;
+			if (inventory[CONST_SLOT_RIGHT] && inventory[CONST_SLOT_RIGHT]->getWeaponType() == WEAPON_QUIVER) {
+				ammoSources.push_back(inventory[CONST_SLOT_RIGHT]);
+			}
+
+			for (Item* ammoItem : ammoSources) {
+				if (!ammoItem) {
+					continue;
+				}
+
+				// Verifica se a fonte é um container (como um quiver)
+				if (Container* container = ammoItem->getContainer()) {
+					for (ContainerIterator iter = container->iterator(); iter.hasNext(); iter.advance()) {
+						if ((*iter)->getAmmoType() == it.ammoType) {
+							return *iter; // Encontrou munição compatível dentro
+						}
+					}
+				}
+				// Verifica se a própria fonte é a munição (ex: flechas no slot de munição)
+				else if (ammoItem->getAmmoType() == it.ammoType) {
+					return ammoItem;
+				}
+			}
+
+			// Se chegou aqui, nenhuma munição adequada foi encontrada
+			return nullptr;
 		}
 	}
 	return item;
@@ -291,11 +345,6 @@ Item* Player::getWeapon(slots_t slot, bool ignoreAmmo) const
 Item* Player::getWeapon(bool ignoreAmmo/* = false*/) const
 {
 	Item* item = getWeapon(CONST_SLOT_LEFT, ignoreAmmo);
-	if (item) {
-		return item;
-	}
-
-	item = getWeapon(CONST_SLOT_RIGHT, ignoreAmmo);
 	if (item) {
 		return item;
 	}
@@ -1039,7 +1088,9 @@ void Player::onCreatureAppear(Creature* creature, bool isLogin)
 		Account account = IOLoginData::loadAccount(accountNumber);
 		Game::updatePremium(account);
 
-		std::cout << name << " has logged in." << std::endl;
+		if (g_config.getBoolean(ConfigManager::PLAYER_CONSOLE_LOGS)) {
+			std::cout << name << " has logged in." << std::endl;
+		}
 
 		if (guild) {
 			guild->addMember(this);
@@ -1139,7 +1190,9 @@ void Player::onRemoveCreature(Creature* creature, bool isLogout)
 
 		g_chat->removeUserFromAllChannels(*this);
 
-		std::cout << getName() << " has logged out." << std::endl;
+		if (g_config.getBoolean(ConfigManager::PLAYER_CONSOLE_LOGS)) {
+			std::cout << getName() << " has logged out." << std::endl;
+		}
 
 		if (guild) {
 			guild->removeMember(this);
@@ -1730,7 +1783,7 @@ BlockType_t Player::blockHit(Creature* attacker, CombatType_t combatType, int32_
 {
 	BlockType_t blockType = Creature::blockHit(attacker, combatType, damage, checkDefense, checkArmor, field);
 
-	if (attacker) {
+	if (attacker && combatType != COMBAT_HEALING) {
 		sendCreatureSquare(attacker, SQ_COLOR_BLACK);
 	}
 
@@ -1841,9 +1894,7 @@ void Player::death(Creature* _lastHitCreature)
 			while (lostSkillTries > skills[i].tries) {
 				lostSkillTries -= skills[i].tries;
 
-				if (skills[i].level <= 10) {
-					skills[i].level = 10;
-					skills[i].tries = 0;
+				if (skills[i].level < 50) {
 					lostSkillTries = 0;
 					break;
 				}
@@ -2059,6 +2110,7 @@ void Player::kickPlayer(bool displayEffect)
 		client->logout(displayEffect, true);
 	} else {
 		g_game.removeCreature(this);
+		g_game.addMagicEffect(getPosition(), CONST_ME_POFF);
 	}
 }
 
@@ -2171,7 +2223,8 @@ bool Player::hasCapacity(const Item* item, uint32_t count) const
 	return itemWeight <= getFreeCapacity();
 }
 
-ReturnValue Player::queryAdd(int32_t index, const Thing& thing, uint32_t count, uint32_t flags, Creature*) const
+
+ReturnValue Player::queryAdd(int32_t index, const Thing & thing, uint32_t count, uint32_t flags, Creature*) const
 {
 	const Item* item = thing.getItem();
 	if (item == nullptr) {
@@ -2196,173 +2249,177 @@ ReturnValue Player::queryAdd(int32_t index, const Thing& thing, uint32_t count, 
 
 	const int32_t& slotPosition = item->getSlotPosition();
 	if ((slotPosition & SLOTP_HEAD) || (slotPosition & SLOTP_NECKLACE) ||
-			(slotPosition & SLOTP_BACKPACK) || (slotPosition & SLOTP_ARMOR) ||
-			(slotPosition & SLOTP_LEGS) || (slotPosition & SLOTP_FEET) ||
-			(slotPosition & SLOTP_RING)) {
+		(slotPosition & SLOTP_BACKPACK) || (slotPosition & SLOTP_ARMOR) ||
+		(slotPosition & SLOTP_LEGS) || (slotPosition & SLOTP_FEET) ||
+		(slotPosition & SLOTP_RING)) {
 		ret = RETURNVALUE_CANNOTBEDRESSED;
-	} else if (slotPosition & SLOTP_TWO_HAND) {
+	}
+	else if (slotPosition & SLOTP_TWO_HAND) {
 		ret = RETURNVALUE_PUTTHISOBJECTINBOTHHANDS;
-	} else if ((slotPosition & SLOTP_RIGHT) || (slotPosition & SLOTP_LEFT)) {
+	}
+	else if ((slotPosition & SLOTP_RIGHT) || (slotPosition & SLOTP_LEFT)) {
 		if (!g_config.getBoolean(ConfigManager::CLASSIC_EQUIPMENT_SLOTS)) {
 			ret = RETURNVALUE_CANNOTBEDRESSED;
-		} else {
+		}
+		else {
 			ret = RETURNVALUE_PUTTHISOBJECTINYOURHAND;
 		}
 	}
 
 	switch (index) {
-		case CONST_SLOT_HEAD: {
-			if (slotPosition & SLOTP_HEAD) {
+	case CONST_SLOT_HEAD: {
+		if (slotPosition & SLOTP_HEAD) {
+			ret = RETURNVALUE_NOERROR;
+		}
+		break;
+	}
+
+	case CONST_SLOT_NECKLACE: {
+		if (slotPosition & SLOTP_NECKLACE) {
+			ret = RETURNVALUE_NOERROR;
+		}
+		break;
+	}
+
+	case CONST_SLOT_BACKPACK: {
+		if (slotPosition & SLOTP_BACKPACK) {
+			ret = RETURNVALUE_NOERROR;
+		}
+		break;
+	}
+
+	case CONST_SLOT_ARMOR: {
+		if (slotPosition & SLOTP_ARMOR) {
+			ret = RETURNVALUE_NOERROR;
+		}
+		break;
+	}
+
+	case CONST_SLOT_LEFT: { // Equipando na Mão Esquerda (Arma)
+		if (!(slotPosition & SLOTP_LEFT)) {
+			ret = RETURNVALUE_CANNOTBEDRESSED;
+			break;
+		}
+
+		const Item* rightItem = inventory[CONST_SLOT_RIGHT];
+
+		// Tentando equipar uma arma de duas mãos
+		if (slotPosition & SLOTP_TWO_HAND) {
+			// Permite se a mão direita estiver vazia OU tiver um quiver
+			if (rightItem && rightItem->getWeaponType() != WEAPON_QUIVER) {
+				ret = RETURNVALUE_BOTHHANDSNEEDTOBEFREE;
+			}
+			else {
 				ret = RETURNVALUE_NOERROR;
 			}
-			break;
 		}
-
-		case CONST_SLOT_NECKLACE: {
-			if (slotPosition & SLOTP_NECKLACE) {
+		// Tentando equipar uma arma de uma mão
+		else {
+			// Se a mão direita tiver um item de duas mãos, ele deve ser removido
+			if (rightItem && (rightItem->getSlotPosition() & SLOTP_TWO_HAND)) {
+				ret = RETURNVALUE_DROPTWOHANDEDITEM;
+			}
+			// Bloqueia equipar uma segunda arma se não for um escudo
+			else if (rightItem && item->getWeaponType() != WEAPON_SHIELD && rightItem->getWeaponType() != WEAPON_SHIELD) {
+				ret = RETURNVALUE_CANONLYUSEONEWEAPON;
+			}
+			else {
 				ret = RETURNVALUE_NOERROR;
 			}
+		}
+		break;
+	}
+
+	case CONST_SLOT_RIGHT: { // Equipando na Mão Direita (Escudo/Quiver)
+		const Item* leftItem = inventory[CONST_SLOT_LEFT];
+
+		// Cenário 1: Equipando um Quiver
+		if (item->getWeaponType() == WEAPON_QUIVER) {
+			ret = RETURNVALUE_NOERROR; // Sempre permite equipar o quiver neste slot.
 			break;
 		}
 
-		case CONST_SLOT_BACKPACK: {
-			if (slotPosition & SLOTP_BACKPACK) {
+		// Cenário 2: Equipando outro item (deve ser um escudo/item válido para a mão direita)
+		if (!(slotPosition & SLOTP_RIGHT)) {
+			ret = RETURNVALUE_CANNOTBEDRESSED;
+			break;
+		}
+
+		// Se a mão esquerda segura um item de duas mãos, bloqueia qualquer outra coisa aqui.
+		if (leftItem && (leftItem->getSlotPosition() & SLOTP_TWO_HAND)) {
+			ret = RETURNVALUE_DROPTWOHANDEDITEM;
+			break;
+		}
+
+		// Tentando equipar um item de duas mãos aqui (a mão esquerda deve estar vazia)
+		if (slotPosition & SLOTP_TWO_HAND) {
+			if (leftItem) {
+				ret = RETURNVALUE_BOTHHANDSNEEDTOBEFREE;
+			}
+			else {
 				ret = RETURNVALUE_NOERROR;
 			}
-			break;
 		}
-
-		case CONST_SLOT_ARMOR: {
-			if (slotPosition & SLOTP_ARMOR) {
+		// Tentando equipar um item de uma mão
+		else {
+			// Bloqueia equipar um segundo escudo
+			if (leftItem && item->getWeaponType() == WEAPON_SHIELD && leftItem->getWeaponType() == WEAPON_SHIELD) {
+				ret = RETURNVALUE_CANONLYUSEONESHIELD;
+			}
+			// Bloqueia equipar uma segunda arma se não for um escudo
+			else if (leftItem && item->getWeaponType() != WEAPON_SHIELD && leftItem->getWeaponType() != WEAPON_SHIELD) {
+				ret = RETURNVALUE_CANONLYUSEONEWEAPON;
+			}
+			else {
 				ret = RETURNVALUE_NOERROR;
 			}
-			break;
 		}
+		break;
+	}
 
-		case CONST_SLOT_RIGHT: {
-			if (slotPosition & SLOTP_RIGHT) {
-				if (!g_config.getBoolean(ConfigManager::CLASSIC_EQUIPMENT_SLOTS)) {
-					if (item->getWeaponType() != WEAPON_SHIELD) {
-						ret = RETURNVALUE_CANNOTBEDRESSED;
-					} else {
-						const Item* leftItem = inventory[CONST_SLOT_LEFT];
-						if (leftItem) {
-							if ((leftItem->getSlotPosition() | slotPosition) & SLOTP_TWO_HAND) {
-								ret = RETURNVALUE_BOTHHANDSNEEDTOBEFREE;
-							} else {
-								ret = RETURNVALUE_NOERROR;
-							}
-						} else {
-							ret = RETURNVALUE_NOERROR;
-						}
-					}
-				} else if (slotPosition & SLOTP_TWO_HAND) {
-					if (inventory[CONST_SLOT_LEFT] && inventory[CONST_SLOT_LEFT] != item) {
-						ret = RETURNVALUE_BOTHHANDSNEEDTOBEFREE;
-					} else {
-						ret = RETURNVALUE_NOERROR;
-					}
-				} else if (inventory[CONST_SLOT_LEFT]) {
-					const Item* leftItem = inventory[CONST_SLOT_LEFT];
-					WeaponType_t type = item->getWeaponType(), leftType = leftItem->getWeaponType();
-
-					if (leftItem->getSlotPosition() & SLOTP_TWO_HAND) {
-						ret = RETURNVALUE_DROPTWOHANDEDITEM;
-					} else if (item == leftItem && count == item->getItemCount()) {
-						ret = RETURNVALUE_NOERROR;
-					} else if (leftType == WEAPON_SHIELD && type == WEAPON_SHIELD) {
-						ret = RETURNVALUE_CANONLYUSEONESHIELD;
-					} else if (leftType == WEAPON_NONE || type == WEAPON_NONE ||
-							   leftType == WEAPON_SHIELD || leftType == WEAPON_AMMO
-							   || type == WEAPON_SHIELD || type == WEAPON_AMMO) {
-						ret = RETURNVALUE_NOERROR;
-					} else {
-						ret = RETURNVALUE_CANONLYUSEONEWEAPON;
-					}
-				} else {
-					ret = RETURNVALUE_NOERROR;
-				}
-			}
-			break;
+	case CONST_SLOT_LEGS: {
+		if (slotPosition & SLOTP_LEGS) {
+			ret = RETURNVALUE_NOERROR;
 		}
+		break;
+	}
 
-		case CONST_SLOT_LEFT: {
-			if (slotPosition & SLOTP_LEFT) {
-				if (!g_config.getBoolean(ConfigManager::CLASSIC_EQUIPMENT_SLOTS)) {
-					WeaponType_t type = item->getWeaponType();
-					if (type == WEAPON_NONE || type == WEAPON_SHIELD) {
-						ret = RETURNVALUE_CANNOTBEDRESSED;
-					} else if (inventory[CONST_SLOT_RIGHT] && (slotPosition & SLOTP_TWO_HAND)) {
-						ret = RETURNVALUE_BOTHHANDSNEEDTOBEFREE;
-					} else {
-						ret = RETURNVALUE_NOERROR;
-					}
-				} else if (slotPosition & SLOTP_TWO_HAND) {
-					if (inventory[CONST_SLOT_RIGHT] && inventory[CONST_SLOT_RIGHT] != item) {
-						ret = RETURNVALUE_BOTHHANDSNEEDTOBEFREE;
-					} else {
-						ret = RETURNVALUE_NOERROR;
-					}
-				} else if (inventory[CONST_SLOT_RIGHT]) {
-					const Item* rightItem = inventory[CONST_SLOT_RIGHT];
-					WeaponType_t type = item->getWeaponType(), rightType = rightItem->getWeaponType();
-
-					if (rightItem->getSlotPosition() & SLOTP_TWO_HAND) {
-						ret = RETURNVALUE_DROPTWOHANDEDITEM;
-					} else if (item == rightItem && count == item->getItemCount()) {
-						ret = RETURNVALUE_NOERROR;
-					} else if (rightType == WEAPON_SHIELD && type == WEAPON_SHIELD) {
-						ret = RETURNVALUE_CANONLYUSEONESHIELD;
-					} else if (rightType == WEAPON_NONE || type == WEAPON_NONE ||
-							   rightType == WEAPON_SHIELD || rightType == WEAPON_AMMO
-							   || type == WEAPON_SHIELD || type == WEAPON_AMMO) {
-						ret = RETURNVALUE_NOERROR;
-					} else {
-						ret = RETURNVALUE_CANONLYUSEONEWEAPON;
-					}
-				} else {
-					ret = RETURNVALUE_NOERROR;
-				}
-			}
-			break;
+	case CONST_SLOT_FEET: {
+		if (slotPosition & SLOTP_FEET) {
+			ret = RETURNVALUE_NOERROR;
 		}
+		break;
+	}
 
-		case CONST_SLOT_LEGS: {
-			if (slotPosition & SLOTP_LEGS) {
-				ret = RETURNVALUE_NOERROR;
-			}
-			break;
+	case CONST_SLOT_RING: {
+		if (slotPosition & SLOTP_RING) {
+			ret = RETURNVALUE_NOERROR;
 		}
+		break;
+	}
 
-		case CONST_SLOT_FEET: {
-			if (slotPosition & SLOTP_FEET) {
-				ret = RETURNVALUE_NOERROR;
-			}
-			break;
+	case CONST_SLOT_AMMO: {
+		// Bloqueia explicitamente o quiver de ser equipado no slot de munição
+		if (item->getWeaponType() == WEAPON_QUIVER) {
+			ret = RETURNVALUE_CANNOTBEDRESSED;
 		}
-
-		case CONST_SLOT_RING: {
-			if (slotPosition & SLOTP_RING) {
-				ret = RETURNVALUE_NOERROR;
-			}
-			break;
+		else if ((slotPosition & SLOTP_AMMO) || g_config.getBoolean(ConfigManager::CLASSIC_EQUIPMENT_SLOTS)) {
+			ret = RETURNVALUE_NOERROR;
 		}
-
-		case CONST_SLOT_AMMO: {
-			if ((slotPosition & SLOTP_AMMO) || g_config.getBoolean(ConfigManager::CLASSIC_EQUIPMENT_SLOTS)) {
-				ret = RETURNVALUE_NOERROR;
-			}
-			break;
+		else {
+			ret = RETURNVALUE_CANNOTBEDRESSED;
 		}
+		break;
+	}
 
-		case CONST_SLOT_WHEREEVER:
-		case -1:
-			ret = RETURNVALUE_NOTENOUGHROOM;
-			break;
+	case CONST_SLOT_WHEREEVER:
+	case -1:
+		ret = RETURNVALUE_NOTENOUGHROOM;
+		break;
 
-		default:
-			ret = RETURNVALUE_NOTPOSSIBLE;
-			break;
+	default:
+		ret = RETURNVALUE_NOTPOSSIBLE;
+		break;
 	}
 
 	if (ret == RETURNVALUE_NOERROR || ret == RETURNVALUE_NOTENOUGHROOM) {
@@ -2460,7 +2517,7 @@ ReturnValue Player::queryMaxCount(int32_t index, const Thing& thing, uint32_t co
 	}
 }
 
-ReturnValue Player::queryRemove(const Thing& thing, uint32_t count, uint32_t flags) const
+ReturnValue Player::queryRemove(const Thing& thing, uint32_t count, uint32_t flags, Creature* /*= nullptr*/) const
 {
 	int32_t index = getThingIndex(&thing);
 	if (index == -1) {
@@ -3174,6 +3231,15 @@ void Player::onEndCondition(ConditionType_t type)
 		onIdleStatus();
 		pzLocked = false;
 		clearAttacked();
+		
+		for (const auto& playerAttackers : g_game.getPlayers()) {
+			Player* attacker = playerAttackers.second;
+			if (attacker->hasAttacked(this))
+			{
+				attacker->removeAttacked(this);
+				sendCreatureSkull(attacker);
+			}
+		}
 
 		if (getSkull() != SKULL_RED) {
 			setSkull(SKULL_NONE);
@@ -4086,3 +4152,4 @@ void Player::setGuild(Guild* guild)
 		oldGuild->removeMember(this);
 	}
 }
+

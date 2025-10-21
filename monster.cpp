@@ -23,6 +23,10 @@
 #include "monster.h"
 #include "game.h"
 #include "spells.h"
+#include "tools.h"
+#include "condition.h"
+
+#include <sstream>
 
 extern Game g_game;
 extern Monsters g_monsters;
@@ -749,7 +753,6 @@ void Monster::onThink(uint32_t interval)
 
 	if (!isInSpawnRange(_position)) {
 		g_game.internalTeleport(this, masterPos);
-		setIdle(true);
 	} else {
 		updateIdleStatus();
 
@@ -2052,4 +2055,27 @@ void Monster::getPathSearchParams(const Creature* creature, FindPathParams& fpp)
 	} else {
 		fpp.fullPathSearch = !canUseAttack(getPosition(), creature);
 	}
+}
+
+
+std::string Monster::getDescription(int32_t) const
+{
+	if (isSummon()) {
+		if (const Condition* familiarCondition = getCondition(CONDITION_FAMILIAR)) {
+			int64_t endTime = familiarCondition->getEndTime();
+			if (endTime > 0) {
+				int64_t remainingMillis = endTime - OTSYS_TIME();
+				if (remainingMillis > 0) {
+					int32_t remainingSeconds = remainingMillis / 1000;
+					int32_t minutes = remainingSeconds / 60;
+					int32_t seconds = remainingSeconds % 60;
+
+					std::ostringstream ss;
+					ss << mType->nameDescription << ".\nIt will despawn in " << minutes << " minute" << (minutes == 1 ? "" : "s") << " and " << seconds << " second" << (seconds == 1 ? "" : "s") << ".";
+					return ss.str();
+				}
+			}
+		}
+	}
+	return mType->nameDescription + '.';
 }

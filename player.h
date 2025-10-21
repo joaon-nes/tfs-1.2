@@ -35,6 +35,8 @@
 #include "groups.h"
 #include "town.h"
 
+#include "familiars.h"
+
 class House;
 class NetworkMessage;
 class Weapon;
@@ -458,6 +460,10 @@ class Player final : public Creature, public Cylinder
 			varSkills[skill] += modifier;
 		}
 
+		void setVarSpecialSkill(SpecialSkills_t skill, int32_t modifier) {
+			varSpecialSkills[skill] += modifier;
+		}
+
 		void setVarStats(stats_t stat, int32_t modifier);
 		int32_t getDefaultStats(stats_t stat) const;
 
@@ -536,6 +542,10 @@ class Player final : public Creature, public Cylinder
 		void doAttacking(uint32_t interval) final;
 		bool hasExtraSwing() final {
 			return lastAttack > 0 && ((OTSYS_TIME() - lastAttack) >= getAttackSpeed());
+		}
+
+		uint16_t getSpecialSkill(uint8_t skill) const {
+			return std::max<int32_t>(0, varSpecialSkills[skill]);
 		}
 
 		uint16_t getSkillLevel(uint8_t skill) const {
@@ -967,6 +977,8 @@ class Player final : public Creature, public Cylinder
 		void forgetInstantSpell(const std::string& spellName);
 		bool hasLearnedInstantSpell(const std::string& spellName) const;
 
+		const std::vector<Familiar>& getFamiliars() const;
+
 	protected:
 		std::forward_list<Condition*> getMuteConditions() const;
 
@@ -992,7 +1004,7 @@ class Player final : public Creature, public Cylinder
 				uint32_t flags, Creature* actor = nullptr) const final;
 		ReturnValue queryMaxCount(int32_t index, const Thing& thing, uint32_t count, uint32_t& maxQueryCount,
 				uint32_t flags) const final;
-		ReturnValue queryRemove(const Thing& thing, uint32_t count, uint32_t flags) const final;
+		ReturnValue queryRemove(const Thing& thing, uint32_t count, uint32_t flags, Creature* actor = nullptr) const override;
 		Cylinder* queryDestination(int32_t& index, const Thing& thing, Item** destItem,
 				uint32_t& flags) final;
 
@@ -1083,6 +1095,7 @@ class Player final : public Creature, public Cylinder
 		uint32_t editListId;
 		uint32_t manaMax;
 		int32_t varSkills[SKILL_LAST + 1];
+		int32_t varSpecialSkills[SPECIALSKILL_LAST + 1] = {};
 		int32_t varStats[STAT_LAST + 1];
 		int32_t purchaseCallback;
 		int32_t saleCallback;
@@ -1093,6 +1106,8 @@ class Player final : public Creature, public Cylinder
 		int32_t offlineTrainingSkill;
 		int32_t offlineTrainingTime;
 		int32_t idleTime;
+		int32_t resets = 0;
+
 
 		uint16_t lastStatsTrainingTime;
 
@@ -1138,8 +1153,16 @@ class Player final : public Creature, public Cylinder
 		bool isPromoted() const;
 
 		uint32_t getAttackSpeed() const {
-			return vocation->getAttackSpeed();
+			int32_t AtkSpeed;
+			AtkSpeed = vocation->getAttackSpeed() - (getSkillLevel(SKILL_FIST) * 11.5);
+			if (AtkSpeed < 500) {
+				return 500;
+			}
+			else {
+				return static_cast<uint32_t>(AtkSpeed);
+			}
 		}
+
 
 		static uint8_t getPercentLevel(uint64_t count, uint64_t nextLevelCount);
 		double getLostPercent() const;

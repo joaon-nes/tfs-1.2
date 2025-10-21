@@ -272,6 +272,7 @@ bool House::transferToDepot(Player* player) const
 	}
 
 	DepotLocker* depotLocker = player->getDepotLocker(townid);
+	player->setLastDepotId(depotLocker->getDepotId());
 	if (depotLocker) {
 		for (Item* item : moveItemList) {
 			g_game.internalMoveItem(item->getParent(), depotLocker, INDEX_WHEREEVER, item, item->getItemCount(), nullptr, FLAG_NOLIMIT);
@@ -693,6 +694,7 @@ void Houses::payHouses(RentPeriod_t rentPeriod) const
 			}
 
 			house->setPaidUntil(paidUntil);
+			house->setPayRentWarnings(0);
 		} else {
 			if (house->getPayRentWarnings() < 7) {
 				int32_t daysLeft = 7 - house->getPayRentWarnings();
@@ -725,6 +727,7 @@ void Houses::payHouses(RentPeriod_t rentPeriod) const
 				ss << "Warning! \nThe " << period << " rent of " << house->getRent() << " gold for your house \"" << house->getName() << "\" is payable. Have it within " << daysLeft << " days or you will lose this house.";
 				letter->setText(ss.str());
 				DepotLocker* depotLocker = player.getDepotLocker(town->getID());
+				player.setLastDepotId(depotLocker->getDepotId());
 				if (depotLocker) {
 					g_game.internalAddItem(depotLocker, letter, INDEX_WHEREEVER, FLAG_NOLIMIT);
 				}

@@ -85,7 +85,7 @@ class Container : public Item, public Cylinder
 			return itemlist.empty();
 		}
 		uint32_t capacity() const {
-			return maxSize;
+			return getName() == "Quiver" ? 4 : maxSize;
 		}
 
 		ContainerIterator iterator() const;
@@ -118,7 +118,7 @@ class Container : public Item, public Cylinder
 				uint32_t flags, Creature* actor = nullptr) const override;
 		ReturnValue queryMaxCount(int32_t index, const Thing& thing, uint32_t count, uint32_t& maxQueryCount,
 				uint32_t flags) const final;
-		ReturnValue queryRemove(const Thing& thing, uint32_t count, uint32_t flags) const final;
+		ReturnValue queryRemove(const Thing& thing, uint32_t count, uint32_t flags, Creature* actor = nullptr) const override final;
 		Cylinder* queryDestination(int32_t& index, const Thing& thing, Item** destItem,
 				uint32_t& flags) final;
 
