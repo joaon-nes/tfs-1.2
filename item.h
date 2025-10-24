@@ -99,6 +99,19 @@ enum AttrTypes_t {
 	ATTR_SHOOTRANGE = 33,
 	ATTR_CLASSIFICATION = 34,
 	ATTR_TIER = 35,
+	// Novos atributos
+	ATTR_LIFE_LEECH_CHANCE = 36,
+	ATTR_LIFE_LEECH_AMOUNT = 37,
+	ATTR_MANA_LEECH_CHANCE = 38,
+	ATTR_MANA_LEECH_AMOUNT = 39,
+	ATTR_CRITICAL_CHANCE = 40,
+	ATTR_CRITICAL_AMOUNT = 41,
+	ATTR_MAGIC_LEVEL_EARTH = 42,
+	ATTR_MAGIC_LEVEL_ICE = 43,
+	ATTR_MAGIC_LEVEL_FIRE = 44,
+	ATTR_MAGIC_LEVEL_ENERGY = 45,
+	ATTR_MAGIC_LEVEL_HOLY = 46,
+	ATTR_MAGIC_LEVEL_DEATH = 47
 };
 
 enum Attr_ReadValue {
@@ -209,6 +222,7 @@ class ItemAttributes
 		}
 
 	protected:
+
 		inline bool hasAttribute(itemAttrTypes type) const {
 			return (type & attributeBits) != 0;
 		}
@@ -524,7 +538,7 @@ class Item : virtual public Thing
 		static std::string getNameDescription(const ItemType& it, const Item* item = nullptr, int32_t subType = -1, bool addArticle = true);
 		static std::string getWeightDescription(const ItemType& it, uint32_t weight, uint32_t count = 1);
 
-		std::string getDescription(int32_t lookDistance) const final;
+		std::string getDescription(int32_t lookDistance) const override;
 		std::string getNameDescription() const;
 		std::string getWeightDescription() const;
 

@@ -484,6 +484,23 @@ void Combat::CombatHealthFunc(Creature* caster, Creature* target, const CombatPa
 		return;
 	}
 
+	if (caster) {
+		if (Player* player = caster->getPlayer()) {
+			Item* weapon = player->getWeapon();
+			if (weapon) {
+				const ItemType& it = Item::items[weapon->getID()];
+				if (it.abilities) {
+					int32_t totalDamageDealt = damage.primary.value + damage.secondary.value;
+					if (it.abilities->criticalHitChance > 0 && uniform_random(1, 100) <= it.abilities->criticalHitChance) {
+						int32_t criticalBonus = (totalDamageDealt * it.abilities->criticalHitDamage) / 100;
+						damage.primary.value += criticalBonus;
+						g_game.addMagicEffect(target->getPosition(), CONST_ME_CRITICAL_DAMAGE);
+					}
+				}
+			}
+		}
+	}
+
 	if ((damage.primary.value < 0 || damage.secondary.value < 0) && caster) {
 		Player* targetPlayer = target->getPlayer();
 		if (targetPlayer && caster->getPlayer()) {

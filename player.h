@@ -460,10 +460,6 @@ class Player final : public Creature, public Cylinder
 			varSkills[skill] += modifier;
 		}
 
-		void setVarSpecialSkill(SpecialSkills_t skill, int32_t modifier) {
-			varSpecialSkills[skill] += modifier;
-		}
-
 		void setVarStats(stats_t stat, int32_t modifier);
 		int32_t getDefaultStats(stats_t stat) const;
 
@@ -542,10 +538,6 @@ class Player final : public Creature, public Cylinder
 		void doAttacking(uint32_t interval) final;
 		bool hasExtraSwing() final {
 			return lastAttack > 0 && ((OTSYS_TIME() - lastAttack) >= getAttackSpeed());
-		}
-
-		uint16_t getSpecialSkill(uint8_t skill) const {
-			return std::max<int32_t>(0, varSpecialSkills[skill]);
 		}
 
 		uint16_t getSkillLevel(uint8_t skill) const {
@@ -1095,7 +1087,6 @@ class Player final : public Creature, public Cylinder
 		uint32_t editListId;
 		uint32_t manaMax;
 		int32_t varSkills[SKILL_LAST + 1];
-		int32_t varSpecialSkills[SPECIALSKILL_LAST + 1] = {};
 		int32_t varStats[STAT_LAST + 1];
 		int32_t purchaseCallback;
 		int32_t saleCallback;
@@ -1152,15 +1143,19 @@ class Player final : public Creature, public Cylinder
 
 		bool isPromoted() const;
 
-		uint32_t getAttackSpeed() const {
-			int32_t AtkSpeed;
-			AtkSpeed = vocation->getAttackSpeed() - (getSkillLevel(SKILL_FIST) * 11.5);
-			if (AtkSpeed < 500) {
+		uint32_t getAttackSpeed() const
+		{
+			int32_t attackSpeed = vocation->getAttackSpeed();
+			const Item* weapon = getWeapon(false);
+			int32_t weaponSkill = getWeaponSkill(weapon);
+
+			attackSpeed -= (weaponSkill * 11.5);
+
+			if (attackSpeed < 500) {
 				return 500;
 			}
-			else {
-				return static_cast<uint32_t>(AtkSpeed);
-			}
+
+			return static_cast<uint32_t>(attackSpeed);
 		}
 
 

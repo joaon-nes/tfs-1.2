@@ -705,18 +705,18 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 			it.getAbilities().stats[STAT_MAGICPOINTS] = pugi::cast<int32_t>(valueAttribute.value());
 		} else if (tmpStrValue == "magicpointspercent") {
 			it.getAbilities().statsPercent[STAT_MAGICPOINTS] = pugi::cast<int32_t>(valueAttribute.value());
-		} else if (tmpStrValue == "criticalhitchance") {
-			it.getAbilities().specialSkills[SPECIALSKILL_CRITICALHITCHANCE] = pugi::cast<int32_t>(valueAttribute.value());
-		} else if (tmpStrValue == "criticalhitamount") {
-			it.getAbilities().specialSkills[SPECIALSKILL_CRITICALHITAMOUNT] = pugi::cast<int32_t>(valueAttribute.value());
-		} else if (tmpStrValue == "manaleechchance") {
-			it.getAbilities().specialSkills[SPECIALSKILL_MANAPOINTSLEECHCHANCE] = pugi::cast<int32_t>(valueAttribute.value());
-		} else if (tmpStrValue == "manaleechamount") {
-			it.getAbilities().specialSkills[SPECIALSKILL_MANAPOINTSLEECHAMOUNT] = pugi::cast<int32_t>(valueAttribute.value());
 		} else if (tmpStrValue == "lifeleechchance") {
-			it.getAbilities().specialSkills[SPECIALSKILL_HITPOINTSLEECHCHANCE] = pugi::cast<int32_t>(valueAttribute.value());
+			it.getAbilities().lifeLeechChance = pugi::cast<int32_t>(valueAttribute.value());
 		} else if (tmpStrValue == "lifeleechamount") {
-			it.getAbilities().specialSkills[SPECIALSKILL_HITPOINTSLEECHAMOUNT] = pugi::cast<int32_t>(valueAttribute.value());
+			it.getAbilities().lifeLeechAmount = pugi::cast<int32_t>(valueAttribute.value());
+		} else if (tmpStrValue == "manaleechchance") {
+			it.getAbilities().manaLeechChance = pugi::cast<int32_t>(valueAttribute.value());
+		} else if (tmpStrValue == "manaleechamount") {
+			it.getAbilities().manaLeechAmount = pugi::cast<int32_t>(valueAttribute.value());
+		} else if (tmpStrValue == "criticalhitchance") {
+			it.getAbilities().criticalHitChance = pugi::cast<int32_t>(valueAttribute.value());
+		} else if (tmpStrValue == "criticalhitdamage") {
+			it.getAbilities().criticalHitDamage = pugi::cast<int32_t>(valueAttribute.value());
 		} else if (tmpStrValue == "fieldabsorbpercentenergy") {
 			it.getAbilities().fieldAbsorbPercent[combatTypeToIndex(COMBAT_ENERGYDAMAGE)] += pugi::cast<int16_t>(valueAttribute.value());
 		} else if (tmpStrValue == "fieldabsorbpercentfire") {
