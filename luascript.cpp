@@ -36,6 +36,8 @@
 #include "scheduler.h"
 #include "databasetasks.h"
 
+#include "item.h"
+
 extern Chat* g_chat;
 extern Game g_game;
 extern Monsters g_monsters;
@@ -1181,12 +1183,6 @@ void LuaScriptInterface::registerFunctions()
 	registerEnum(CONDITION_PARAM_SUBID)
 	registerEnum(CONDITION_PARAM_FIELD)
 	registerEnum(CONDITION_PARAM_DISABLE_DEFENSE)
-	registerEnum(CONDITION_PARAM_SPECIALSKILL_CRITICALHITCHANCE)
-	registerEnum(CONDITION_PARAM_SPECIALSKILL_CRITICALHITAMOUNT)
-	registerEnum(CONDITION_PARAM_SPECIALSKILL_HITPOINTSLEECHCHANCE)
-	registerEnum(CONDITION_PARAM_SPECIALSKILL_HITPOINTSLEECHAMOUNT)
-	registerEnum(CONDITION_PARAM_SPECIALSKILL_MANAPOINTSLEECHCHANCE)
-	registerEnum(CONDITION_PARAM_SPECIALSKILL_MANAPOINTSLEECHAMOUNT)
 
 	registerEnum(CONST_ME_NONE)
 	registerEnum(CONST_ME_DRAWBLOOD)

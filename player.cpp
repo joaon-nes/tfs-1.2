@@ -1894,7 +1894,7 @@ void Player::death(Creature* _lastHitCreature)
 			while (lostSkillTries > skills[i].tries) {
 				lostSkillTries -= skills[i].tries;
 
-				if (skills[i].level < 50) {
+				if (skills[i].level <= 10) {
 					lostSkillTries = 0;
 					break;
 				}

@@ -72,7 +72,6 @@ Skulls_t getSkullType(const std::string& strValue);
 std::string getCombatName(CombatType_t combatType);
 
 std::string getSkillName(uint8_t skillid);
-std::string getSpecialSkillName(uint8_t skillid);
 
 std::string ucfirst(std::string str);
 std::string ucwords(std::string str);

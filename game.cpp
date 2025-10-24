@@ -3464,7 +3464,8 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 			}
 		}
 		target->gainHealth(attacker, damage.primary.value);
-	} else {
+	}
+	else {
 		if (!target->isAttackable()) {
 			if (!target->isInGhostMode()) {
 				addMagicEffect(targetPos, CONST_ME_POFF);
@@ -3475,7 +3476,8 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 		Player* attackerPlayer;
 		if (attacker) {
 			attackerPlayer = attacker->getPlayer();
-		} else {
+		}
+		else {
 			attackerPlayer = nullptr;
 		}
 
@@ -3486,28 +3488,6 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 		int32_t healthChange = damage.primary.value + damage.secondary.value;
 		if (healthChange == 0) {
 			return true;
-		}
-
-		if (attackerPlayer) {
-			uint16_t chance = attackerPlayer->getSpecialSkill(SPECIALSKILL_HITPOINTSLEECHCHANCE);
-			if (chance != 0 && uniform_random(0, 100) <= chance) {
-				CombatDamage lifeLeech;
-				lifeLeech.primary.value = std::round(healthChange * (attackerPlayer->getSpecialSkill(SPECIALSKILL_HITPOINTSLEECHAMOUNT) / 100.));
-				g_game.combatChangeHealth(nullptr, attackerPlayer, lifeLeech);
-			}
-
-			chance = attackerPlayer->getSpecialSkill(SPECIALSKILL_MANAPOINTSLEECHCHANCE);
-			if (chance != 0 && uniform_random(0, 100) <= chance) {
-				CombatDamage manaLeech;
-				manaLeech.primary.value = std::round(healthChange * (attackerPlayer->getSpecialSkill(SPECIALSKILL_MANAPOINTSLEECHAMOUNT) / 100.));
-				g_game.combatChangeMana(nullptr, attackerPlayer, manaLeech.primary.value, ORIGIN_NONE);
-			}
-
-			chance = attackerPlayer->getSpecialSkill(SPECIALSKILL_CRITICALHITCHANCE);
-			if (chance != 0 && uniform_random(0, 100) <= chance) {
-				healthChange += std::round(healthChange * (attackerPlayer->getSpecialSkill(SPECIALSKILL_CRITICALHITAMOUNT) / 100.));
-				g_game.addMagicEffect(target->getPosition(), CONST_ME_CRITICAL_DAMAGE);
-			}
 		}
 
 		TextMessage message;
@@ -3541,7 +3521,8 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 					message.type = MESSAGE_EVENT_DEFAULT;
 					if (!attacker || targetPlayer == attackerPlayer) {
 						message.text = "You lose " + damageString + " mana.";
-					} else {
+					}
+					else {
 						message.text = "You lose " + damageString + " mana blocking an attack by " + attacker->getNameDescription() + '.';
 					}
 					targetPlayer->sendTextMessage(message);
@@ -3574,14 +3555,16 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 		if (damage.primary.value >= targetHealth) {
 			damage.primary.value = targetHealth;
 			damage.secondary.value = 0;
-		} else if (damage.secondary.value) {
+		}
+		else if (damage.secondary.value) {
 			damage.secondary.value = std::min<int32_t>(damage.secondary.value, targetHealth - damage.primary.value);
 		}
 
 		realDamage = damage.primary.value + damage.secondary.value;
 		if (realDamage == 0) {
 			return true;
-		} else if (realDamage >= targetHealth) {
+		}
+		else if (realDamage >= targetHealth) {
 			for (CreatureEvent* creatureEvent : target->getCreatureEvents(CREATURE_EVENT_PREPAREDEATH)) {
 				if (!creatureEvent->executeOnPrepareDeath(target, attacker)) {
 					return false;
@@ -3590,6 +3573,31 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 		}
 
 		target->drainHealth(attacker, realDamage);
+
+		if (attackerPlayer) {
+			Item* weapon = attackerPlayer->getWeapon();
+			if (weapon) {
+				const ItemType& it = Item::items[weapon->getID()];
+				if (it.abilities) {
+					if (it.abilities->lifeLeechChance > 0 && uniform_random(1, 100) <= it.abilities->lifeLeechChance) {
+						int32_t lifeStolen = (realDamage * it.abilities->lifeLeechAmount) / 100;
+						if (lifeStolen > 0) {
+							attacker->changeHealth(lifeStolen);
+							addAnimatedText("+" + std::to_string(lifeStolen), attacker->getPosition(), TEXTCOLOR_GREEN);
+						}
+					}
+
+					if (it.abilities->manaLeechChance > 0 && uniform_random(1, 100) <= it.abilities->manaLeechChance) {
+						int32_t manaStolen = (realDamage * it.abilities->manaLeechAmount) / 100;
+						if (manaStolen > 0) {
+							attackerPlayer->changeMana(manaStolen);
+							addAnimatedText("+" + std::to_string(manaStolen), attacker->getPosition(), TEXTCOLOR_BLUE);
+						}
+					}
+				}
+			}
+		}
+
 		if (list.empty()) {
 			map.getSpectators(list, targetPos, true, true);
 		}
@@ -3631,7 +3639,8 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 				message.type = MESSAGE_EVENT_DEFAULT;
 				if (!attacker || targetPlayer == attackerPlayer) {
 					message.text = "You lose " + damageString + '.';
-				} else {
+				}
+				else {
 					message.text = "You lose " + damageString + " due to an attack by " + attacker->getNameDescription() + '.';
 				}
 				targetPlayer->sendTextMessage(message);

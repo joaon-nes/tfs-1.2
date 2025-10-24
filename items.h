@@ -74,6 +74,13 @@ struct Abilities {
 
 		conditionImmunities = 0;
 		conditionSuppressions = 0;
+
+		lifeLeechChance = 0;
+		lifeLeechAmount = 0;
+		manaLeechChance = 0;
+		manaLeechAmount = 0;
+		criticalHitChance = 0;
+		criticalHitDamage = 0;
 	}
 
 	uint32_t healthGain;
@@ -86,11 +93,10 @@ struct Abilities {
 
 	//stats modifiers
 	int32_t stats[STAT_LAST + 1];
-	int32_t statsPercent[STAT_LAST + 1];
+	int32_t statsPercent[STAT_LAST + 1] = { 0 };
 
 	//extra skill modifiers
 	int32_t skills[SKILL_LAST + 1];
-	int32_t specialSkills[SPECIALSKILL_LAST + 1] = { 0 };
 
 	int32_t speed;
 
@@ -107,6 +113,13 @@ struct Abilities {
 	bool manaShield;
 	bool invisible;
 	bool regeneration;
+
+	int32_t lifeLeechChance;
+	int32_t lifeLeechAmount;
+	int32_t manaLeechChance;
+	int32_t manaLeechAmount;
+	int32_t criticalHitChance;
+	int32_t criticalHitDamage;
 };
 
 class ConditionDamage;
@@ -224,11 +237,8 @@ class ItemType
 		int32_t runeMagLevel;
 		int32_t runeLevel;
 
-
-		// Novos Atributos
 		int32_t classification;
 		int32_t tier;
-		//
 
 		CombatType_t combatType;
 
